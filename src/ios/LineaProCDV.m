@@ -49,15 +49,18 @@
 
 - (void)initDT:(CDVInvokedUrlCommand*)command
 {
-    CDVPluginResult* pluginResult = nil;
+    // runInBackground Fix
+    [self.commandDelegate runInBackground:^{
+        CDVPluginResult* pluginResult = nil;
 
-    if (!dtdev) {
-        dtdev = [DTDevices sharedDevice];
-        [dtdev addDelegate:self];
-        [dtdev connect];
-    }
+        if (!dtdev) {
+            dtdev = [DTDevices sharedDevice];
+            [dtdev addDelegate:self];
+            [dtdev connect];
+        }
 
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];
 }
 
 - (void)getConnectionStatus:(CDVInvokedUrlCommand*)command
