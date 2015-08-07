@@ -63,6 +63,44 @@
     }];
 }
 
+- (void) readFromSettingsFile:(CDVInvokedUrlCommand*)command
+{
+    NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
+
+    //bundle path
+    NSString *bPath = [[NSBundle mainBundle] bundlePath];
+    NSString *settingsPath = [bPath stringByAppendingPathComponent:@"Settings.bundle"];
+    NSString *plistFile = [settingsPath stringByAppendingPathComponent:@"Root.plist"];   
+
+    //preferences
+    NSDictionary *settingsDictionary = [NSDictionary dictionaryWithContentsOfFile:plistFile];
+    NSArray *preferencesArray = [settingsDictionary objectForKey:@"PreferenceSpecifiers"];
+
+    //loop thru prefs
+    NSDictionary *item;
+
+    for(item in preferencesArray)
+    {
+        //get the key
+        NSString *keyValue = [item objectForKey:@"Key"];
+        //get the default
+        id defaultValue = [item objectForKey:@"DefaultValue"];
+
+        NSLog(@"%@, %@", defaultValue, keyValue);
+        
+        // if we have both, set in defaults
+        if (keyValue && defaultValue)
+        [standardUserDefaults setObject:defaultValue forKey:keyValue];
+    }
+
+    NSLog(@"PassThroughSync: %@", [standardUserDefaults objectForKey:@"PassThroughSync"]);
+
+    // keep the in-memory cache in sync with the database
+    [standardUserDefaults synchronize];
+
+    //FIGURE OUT HOW TO GET RESULTS BACK TO HTML.
+}
+
 - (void)getConnectionStatus:(CDVInvokedUrlCommand*)command
 {
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[dtdev connstate]];
@@ -204,5 +242,7 @@
     NSString* retStr = [ NSString stringWithFormat:@"var rawCodesArr = %@; LineaProCDV.onBarcodeData(rawCodesArr, '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@');", rawCodesArrJSString, license, dateBirth, state, city, expires, gender, height, weight, hair, eye, name, lastName];
     [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
 }
+
+
 
 @end

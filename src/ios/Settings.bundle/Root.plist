@@ -10,15 +10,29 @@
 			<key>AutocorrectionType</key>
 			<string>No</string>
 			<key>Title</key>
-			<string>URL</string>
+			<string>FOO</string>
 			<key>AutocapitalizationType</key>
 			<string>None</string>
 			<key>IsSecure</key>
 			<false/>
 			<key>Key</key>
-			<string>url</string>
+			<string>FOO</string>
 			<key>DefaultValue</key>
-			<string>http://epoch.app</string>
+			<string>http://blecj.ick</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>PassThroughSync</string>
+			<key>Key</key>
+			<string>PassThroughSync</string>
+			<key>DefaultValue</key>
+			<string>YES</string>
+			<key>TrueValue</key>
+			<string>YES</string>
+			<key>FalseValue</key>
+			<string>NO</string>
 		</dict>
 	</array>
 	<key>StringsTable</key>

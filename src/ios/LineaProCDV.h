@@ -23,5 +23,6 @@
 
 - (void)setPassThroughSync:(CDVInvokedUrlCommand*)command;
 - (void)unsetPassThroughSync:(CDVInvokedUrlCommand*)command;
+- (void)readFromSettingsFile:(CDVInvokedUrlCommand*)command;
 
 @end

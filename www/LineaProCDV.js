@@ -20,6 +20,7 @@ LineaProCDV.prototype.initDT = function(connectionCallback, cardCallback, barcCa
     this.barcodeCallback = barcCallback;
 
     exec(null, errorCallback, "LineaProCDV", "initDT", []);
+    exec(null, errorCallback, "LineaProCDV", "readFromSettingsFile", []);
     //alert("LineaProCDV");
 };
 
