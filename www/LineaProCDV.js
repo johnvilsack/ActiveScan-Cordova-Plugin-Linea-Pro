@@ -6,22 +6,21 @@ var argscheck = require('cordova/argscheck'),
 
  function LineaProCDV() {
     this.results = [];
-
     this.connCallback = null;
     this.errorCallback = null;
     this.cancelCallback = null;
     this.barcodeCallback = null;
 }
 
-LineaProCDV.prototype.initDT = function(connectionCallback, cardCallback, barcCallback, cancelCallback, errorCallback, btDiscCallback, btConnCallback, btDisconnCallback, btGetDeviceNameCallback) {
+LineaProCDV.prototype.initDT = function(connectionCallback, barcCallback, cancelCallback, errorCallback) {
     this.results = [];
-
     this.connCallback = connectionCallback;
     this.barcodeCallback = barcCallback;
 
     exec(null, errorCallback, "LineaProCDV", "initDT", []);
-    exec(null, errorCallback, "LineaProCDV", "readFromSettingsFile", []);
-    //alert("LineaProCDV");
+    console.log("Initialized");
+    console.log("Connection Callback");
+    console.log(connectionCallback);
 };
 
 LineaProCDV.prototype.barcodeStart = function() {
