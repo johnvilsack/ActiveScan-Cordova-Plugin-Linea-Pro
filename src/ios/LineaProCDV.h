@@ -23,16 +23,6 @@
 
 - (void)setPassThroughSync:(CDVInvokedUrlCommand*)command;
 - (void)unsetPassThroughSync:(CDVInvokedUrlCommand*)command;
-
-- (void)discoverDevices:(CDVInvokedUrlCommand*)command;
-
-- (void)btConnect:(CDVInvokedUrlCommand*)command;
-- (void)btDisconnect:(CDVInvokedUrlCommand*)command;
-
-- (void)btGetDeviceName:(CDVInvokedUrlCommand*)command;
-
-- (void)btWrite:(CDVInvokedUrlCommand*)command;
-- (void)prnPrintText:(CDVInvokedUrlCommand*)command;
-- (void)prnPrintZPL:(CDVInvokedUrlCommand*)command;
+- (void)readFromSettingsFile:(CDVInvokedUrlCommand*)command;
 
 @end

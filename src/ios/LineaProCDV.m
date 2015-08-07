@@ -39,14 +39,6 @@
     }
 }
 
--(void) scanPaymentCard:(NSString*)num {
-
-    NSString *jsStatement = [NSString stringWithFormat:@"onSuccessScanPaymentCard('%@');", num];
-    [self.webView stringByEvaluatingJavaScriptFromString:jsStatement];
-	[self.viewController dismissViewControllerAnimated:YES completion:nil];
-
-}
-
 - (void)initDT:(CDVInvokedUrlCommand*)command
 {
     // runInBackground Fix
@@ -63,6 +55,51 @@
     }];
 }
 
+// Preferences settings fro Lineas
+- (void) readFromSettingsFile:(CDVInvokedUrlCommand*)command
+{
+    NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
+
+    //bundle path
+    NSString *bPath = [[NSBundle mainBundle] bundlePath];
+    NSString *settingsPath = [bPath stringByAppendingPathComponent:@"Settings.bundle"];
+    NSString *plistFile = [settingsPath stringByAppendingPathComponent:@"Root.plist"];   
+
+    // Dictionary and Primary Array
+    NSDictionary *settingsDictionary = [NSDictionary dictionaryWithContentsOfFile:plistFile];
+    NSArray *preferencesArray = [settingsDictionary objectForKey:@"PreferenceSpecifiers"];
+
+    //Preferences Array
+    NSDictionary *pref;
+
+    // BOOL latestNews = ![[NSUserDefaults standardUserDefaults] boolForKey:@"notLatestNews"];
+
+    for(pref in preferencesArray)
+    {
+        //get the key
+        NSString *keyValue = [pref objectForKey:@"Key"];
+        //get the default
+        id defaultValue = [pref objectForKey:@"DefaultValue"];
+
+        NSLog(@"%@, %@", defaultValue, keyValue);
+        
+        // if we have both, set in defaults
+        if (keyValue && defaultValue)
+        [standardUserDefaults setObject:defaultValue forKey:keyValue];
+    }
+
+    int retPassThroughSync = [[standardUserDefaults objectForKey:@"PassThroughSync"] intValue];
+
+    NSLog(@"%i", retPassThroughSync);
+
+    // keep the in-memory cache in sync with the database
+   [standardUserDefaults synchronize];
+
+    //FIGURE OUT HOW TO GET RESULTS BACK TO HTML.
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:retPassThroughSync];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 - (void)getConnectionStatus:(CDVInvokedUrlCommand*)command
 {
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[dtdev connstate]];
@@ -73,203 +110,6 @@
 {
     [dtdev barcodeStartScan:nil];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[dtdev connstate]];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)setPassThroughSync:(CDVInvokedUrlCommand *)command
-{
-    NSError *error=nil;
-
-    BOOL dtResult = [dtdev setPassThroughSync:true error:&error];
-    NSLog(@"setPassThroughSync: %d", dtResult);
-
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:1];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)unsetPassThroughSync:(CDVInvokedUrlCommand *)command
-{
-    NSError *error=nil;
-
-    if (![dtdev setPassThroughSync:false error:&error])
-        NSLog(@"unsetPassThroughSync: %i %@", 0, error.description);
-    else
-        NSLog(@"unsetPassThroughSync: %i", 1);
-
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)discoverDevices:(CDVInvokedUrlCommand *)command
-{
-    NSError *error=nil;
-    NSError *error2=nil;
-
-    NSLog(@"btDiscoverDevices");
-
-    NSArray* btDevices = [dtdev btDiscoverDevices:10 maxTime:8 codTypes:0 error:&error];
-
-
-    if (error) {
-        NSLog(@"discoverDevices Error: %@", error.description);
-        NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBluetoothDiscoverComplete(%i, [], '%@');", false, error.description];
-        [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-    } else {
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:btDevices options:NSJSONWritingPrettyPrinted error:&error2];
-        NSString *jsonString;
-        if (!jsonData) {
-          NSLog(@"Got an error: %@", error2);
-          jsonString = @"[]";
-        } else {
-          jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-        }
-
-        NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBluetoothDiscoverComplete(%i, %@, null);", true, jsonString];
-        [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-
-
-    }
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:true];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)btConnect:(CDVInvokedUrlCommand *)command
-{;
-    NSError *error=nil;
-
-    NSString* address = [command.arguments objectAtIndex:0];
-    NSLog(@"btConnect: %@", address);
-    BOOL status;
-
-    [dtdev btConnectSupportedDevice:address pin:nil error:&error];
-
-    if (error) {
-        status = false;
-        NSLog(@"btConnect Error: %@", error.description);
-
-        NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBluetoothDeviceConnected(null, '%@');", error.description];
-        [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-    } else {
-        status = true;
-        NSLog(@"btConnect Success!");
-    }
-
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:status];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)btDisconnect:(CDVInvokedUrlCommand *)command
-{;
-    NSError *error=nil;
-
-    NSString* address = [command.arguments objectAtIndex:0];
-    NSLog(@"btDisconnect: %@", address);
-    BOOL status;
-
-    [dtdev btDisconnect:address error:&error];
-
-    if (error) {
-        status = false;
-        NSLog(@"btDisconnect Error: %@", error.description);
-    } else {
-        status = true;
-        NSLog(@"btDisconnect Success!");
-    }
-
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:status];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)btGetDeviceName:(CDVInvokedUrlCommand *)command
-{;
-    NSError *error=nil;
-
-    NSString* address = [command.arguments objectAtIndex:0];
-    NSLog(@"btGetDeviceName: %@", address);
-    BOOL status;
-
-    NSString* name = [dtdev btGetDeviceName:address error:&error];
-
-    if (error) {
-        status = false;
-        NSLog(@"btGetDeviceName Error: %@", error.description);
-    } else {
-        status = true;
-        NSLog(@"btGetDeviceName Success! %@", name);
-
-        NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBluetoothGetDeviceName('%@', '%@');", address, name];
-        [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-    }
-
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:status];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)btWrite:(CDVInvokedUrlCommand *)command
-{;
-    NSError *error=nil;
-
-    NSString* data = [command.arguments objectAtIndex:0];
-    NSLog(@"btWrite: %@", data);
-    BOOL status;
-
-    [dtdev btWrite:data error:&error];
-
-    if (error) {
-        status = false;
-        NSLog(@"btWrite Error: %@", error.description);
-    } else {
-        status = true;
-        NSLog(@"btWrite Success!");
-    }
-
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:status];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)prnPrintText:(CDVInvokedUrlCommand *)command
-{;
-    NSError *error=nil;
-
-    NSString* data = [command.arguments objectAtIndex:0];
-    NSLog(@"prnPrintText: %@", data);
-    BOOL status;
-
-    [dtdev prnPrintText:data error:&error];
-
-    if (error) {
-        status = false;
-        NSLog(@"prnPrintText Error: %@", error.description);
-    } else {
-        status = true;
-        NSLog(@"prnPrintText Success!");
-    }
-
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:status];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)prnPrintZPL:(CDVInvokedUrlCommand *)command
-{;
-    NSError *error=nil;
-
-    NSString* str = [command.arguments objectAtIndex:0];
-    NSData* data = [str dataUsingEncoding:NSUTF8StringEncoding];
-
-    NSLog(@"prnPrintZPL: %@", str);
-    BOOL status;
-
-    [dtdev prnWriteDataToChannel:50 data:data error:&error];
-
-    if (error) {
-        status = false;
-        NSLog(@"prnPrintZPL Error: %@", error.description);
-    } else {
-        status = true;
-        NSLog(@"prnPrintZPL Success!");
-    }
-
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:status];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -306,74 +146,6 @@
     NSLog(@"deviceButtonReleased: %d", which);
 }
 
-- (void) deviceFeatureSupported: (int) feature value:(int) value {
-    NSLog(@"deviceFeatureSupported: feature - %d, value - %d", feature, value);
-}
-
-- (void) firmwareUpdateProgress: (int) phase percent:(int) percent {
-    NSLog(@"firmwareUpdateProgress: phase - %d, percent - %d", phase, percent);
-}
-
-- (void) magneticCardData: (NSString *) track1 track2:(NSString *) track2 track3:(NSString *) track3 {
-    NSLog(@"magneticCardData: track1 - %@, track2 - %@, track3 - %@", track1, track2, track3);
-    NSDictionary *card = [dtdev msProcessFinancialCard:track1 track2:track2];
-    if(card && [card objectForKey:@"accountNumber"]!=nil && [[card objectForKey:@"expirationYear"] intValue]!=0)
-    {
-        NSLog(@"magneticCardData (full info): accountNumber - %@, cardholderName - %@, expirationYear - %@, expirationMonth - %@, serviceCode - %@, discretionaryData - %@, firstName - %@, lastName - %@", [card objectForKey:@"accountNumber"], [card objectForKey:@"cardholderName"], [card objectForKey:@"expirationYear"], [card objectForKey:@"expirationMonth"], [card objectForKey:@"serviceCode"], [card objectForKey:@"discretionaryData"], [card objectForKey:@"firstName"], [card objectForKey:@"lastName"]);
-    }
-    NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onMagneticCardData('%@', '%@', '%@');", track1, track2, track3];
-    [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-}
-
-- (void) magneticCardEncryptedData: (int) encryption tracks:(int) tracks data:(NSData *) data {
-    NSLog(@"magneticCardEncryptedData: encryption - %d, tracks - %d, data - %@", encryption, tracks, [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
-}
-
-- (void) magneticCardEncryptedData: (int) encryption tracks:(int) tracks data:(NSData *) data track1masked:(NSString *) track1masked track2masked:(NSString *) track2masked track3:(NSString *) track3 {
-    NSLog(@"magneticCardEncryptedData: encryption - %d, tracks - %d, track3 - %@, track1masked - %@, track2masked - %@, track3 - %@", encryption, tracks, [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding], track1masked, track2masked, track3);
-}
-
-- (void) magneticCardEncryptedRawData: (int) encryption data:(NSData *) data {
-    NSLog(@"magneticCardEncryptedRawData: encryption - %d, data - %@", encryption, [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
-}
-
-- (void) magneticCardRawData: (NSData *) tracks {
-    NSLog(@"magneticCardRawData: data - %@", [[NSString alloc] initWithData:tracks encoding:NSUTF8StringEncoding]);
-}
-
-- (void) magneticJISCardData: (NSString *) data {
-    NSLog(@"magneticJISCardData: data - %@", data);
-}
-
-- (void) paperStatus: (BOOL) present {
-    NSLog(@"paperStatus: present - %d", present);
-}
-
-- (void) PINEntryCompleteWithError: (NSError *) error {
-    NSLog(@"PINEntryCompleteWithError: error - %@", [error localizedDescription]);
-}
-
-- (void) rfCardDetected: (int) cardIndex info:(DTRFCardInfo *) info {
-    NSLog(@"rfCardDetected (debug): cardIndex - %d, info - %@", cardIndex, [info description]);
-    NSLog(@"rfCardDetected (debug): cardIndex - %d, info - %@", cardIndex, [info debugDescription]);
-}
-
-- (void) rfCardRemoved: (int) cardIndex {
-    NSLog(@"rfCardRemoved: cardIndex - %d", cardIndex);
-}
-
-- (void) sdkDebug: (NSString *) logText source:(int) source {
-    NSLog(@"sdkDebug: logText - %@, source - %d", logText, source);
-}
-
-- (void) smartCardInserted: (SC_SLOTS) slot {
-    NSLog(@"smartCardInserted: slot - %d", slot);
-}
-
-- (void) smartCardRemoved: (SC_SLOTS) slot {
-    NSLog(@"smartCardRemoved: slot - %d", slot);
-}
-
 - (void) barcodeData: (NSString *) barcode type:(int) type {
     NSLog(@"barcodeData: barcode - %@, type - %@", barcode, [dtdev barcodeType2Text:type]);
     NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBarcodeData('%@', '%@');", barcode, [dtdev barcodeType2Text:type]];
@@ -384,6 +156,30 @@
     NSLog(@"barcodeNSData: barcode - %@, type - %@", [[NSString alloc] initWithData:barcode encoding:NSUTF8StringEncoding], isotype);
     NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBarcodeData('%@', '%@');", [[NSString alloc] initWithData:barcode encoding:NSUTF8StringEncoding], isotype];
     [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
+}
+
+- (void)setPassThroughSync:(CDVInvokedUrlCommand *)command
+{
+    NSError *error=nil;
+
+    BOOL dtResult = [dtdev setPassThroughSync:true error:&error];
+    NSLog(@"setPassThroughSync: %d", dtResult);
+
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:1];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)unsetPassThroughSync:(CDVInvokedUrlCommand *)command
+{
+    NSError *error=nil;
+
+    if (![dtdev setPassThroughSync:false error:&error])
+        NSLog(@"unsetPassThroughSync: %i %@", 0, error.description);
+    else
+        NSLog(@"unsetPassThroughSync: %i", 1);
+
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:0];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 + (NSString*) getPDF417ValueByCode: (NSArray*) codesArr code:(NSString*)code {
@@ -443,39 +239,6 @@
     NSString* rawCodesArrJSString = [LineaProCDV generateStringForArrayEvaluationInJS:codesArr];
     //LineaProCDV.onBarcodeData(scanId, dob, state, city, expires, gender, height, weight, hair, eye)
     NSString* retStr = [ NSString stringWithFormat:@"var rawCodesArr = %@; LineaProCDV.onBarcodeData(rawCodesArr, '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@');", rawCodesArrJSString, license, dateBirth, state, city, expires, gender, height, weight, hair, eye, name, lastName];
-    [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-}
-
-- (void) bluetoothDeviceConnected: (NSString *) address {
-    NSLog(@"bluetoothDeviceConnected: address - %@", address);
-    NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBluetoothDeviceConnected('%@');", address];
-    [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-}
-
-- (void) bluetoothDeviceDisconnected: (NSString *) address {
-    NSLog(@"bluetoothDeviceDisconnected: address - %@", address);
-    NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBluetoothDeviceDisconnected('%@');", address];
-    [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-}
-
-- (void) bluetoothDeviceDiscovered: (NSString *) address name:(NSString *) name {
-    NSLog(@"bluetoothDeviceDiscovered: address - %@, name - @name", name);
-    NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBluetoothDeviceDiscovered('%@', '%@');", address, name];
-    //[[super webView] stringByEvaluatingJavaScriptFromString:retStr];
-}
-- (NSString *) bluetoothDevicePINCodeRequired: (NSString *) address name:(NSString *) name {
-    NSLog(@"bluetoothDevicePINCodeRequired: address - %@, name - @name", name);
-    return address;
-}
-
-- (BOOL) bluetoothDeviceRequestedConnection: (NSString *) address name:(NSString *) name {
-    NSLog(@"bluetoothDeviceRequestedConnection: address - %@, name - @name", name);
-    return TRUE;
-}
-
-- (void) bluetoothDiscoverComplete: (BOOL) success {
-    NSLog(@"bluetoothDiscoverComplete: success - %d", success);
-    NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.onBluetoothDiscoverComplete('%i');", success];
     [[super webView] stringByEvaluatingJavaScriptFromString:retStr];
 }
 

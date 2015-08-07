@@ -6,33 +6,21 @@ var argscheck = require('cordova/argscheck'),
 
  function LineaProCDV() {
     this.results = [];
-
     this.connCallback = null;
     this.errorCallback = null;
     this.cancelCallback = null;
-    this.cardDataCallback = null;
     this.barcodeCallback = null;
-
-    this.btDiscoveryCompleteCallback = null;
-    this.btConnectedCallback = null;
-    this.btDisconnectedCallback = null;
-    this.btGetDeviceNameCallback = null;
-
 }
 
-LineaProCDV.prototype.initDT = function(connectionCallback, cardCallback, barcCallback, cancelCallback, errorCallback, btDiscCallback, btConnCallback, btDisconnCallback, btGetDeviceNameCallback) {
+LineaProCDV.prototype.initDT = function(connectionCallback, barcCallback, cancelCallback, errorCallback) {
     this.results = [];
-
     this.connCallback = connectionCallback;
-    this.cardDataCallback = cardCallback;
     this.barcodeCallback = barcCallback;
 
-    this.btDiscoveryCompleteCallback = btDiscCallback;
-    this.btConnectedCallback = btConnCallback;
-    this.btDisconnectedCallback = btDisconnCallback;
-
     exec(null, errorCallback, "LineaProCDV", "initDT", []);
-    //alert("LineaProCDV");
+    console.log("Initialized");
+    console.log("Connection Callback");
+    console.log(connectionCallback);
 };
 
 LineaProCDV.prototype.barcodeStart = function() {
@@ -47,41 +35,12 @@ LineaProCDV.prototype.connectionChanged = function(state) {
     this.connCallback(state);
 };
 
-LineaProCDV.prototype.onMagneticCardData = function(track1, track2, track3) {
-    this.cardDataCallback(track1 + track2 + track3);
-    //this.barcodeStart();
-};
-
-LineaProCDV.prototype.discoverDevices = function() {
-    exec(null, null, "LineaProCDV", "discoverDevices", []);
-}
-
 LineaProCDV.prototype.setPassThroughSync = function() {
     exec(null, null, "LineaProCDV", "setPassThroughSync", []);
 }
 
 LineaProCDV.prototype.unsetPassThroughSync = function() {
     exec(null, null, "LineaProCDV", "unsetPassThroughSync", []);
-}
-
-LineaProCDV.prototype.btConnect = function(address) {
-    exec(null, null, "LineaProCDV", "btConnect", [address]);
-}
-
-LineaProCDV.prototype.btDisconnect = function(address) {
-    exec(null, null, "LineaProCDV", "btDisconnect", [address]);
-}
-
-LineaProCDV.prototype.btWrite = function(data) {
-    exec(null, null, "LineaProCDV", "btWrite", [data]);
-}
-
-LineaProCDV.prototype.prnPrintText = function(data) {
-    exec(null, null, "LineaProCDV", "prnPrintText", [data]);
-}
-
-LineaProCDV.prototype.prnPrintZPL = function(data) {
-    exec(null, null, "LineaProCDV", "prnPrintZPL", [data]);
 }
 
 LineaProCDV.prototype.onBarcodeData = function(rawCodesArr, scanId, dob, state, city, expires, gender, height, weight, hair, eye, firstName, lastName) {
@@ -102,21 +61,5 @@ LineaProCDV.prototype.onBarcodeData = function(rawCodesArr, scanId, dob, state, 
                };
     this.barcodeCallback(data);
 };
-
-LineaProCDV.prototype.onBluetoothDeviceConnected = function(address, error) {
-  this.btConnectedCallback(address, error);
-}
-
-LineaProCDV.prototype.onBluetoothDeviceDisconnected = function(address) {
-  this.btDisconnectedCallback(address);
-}
-
-LineaProCDV.prototype.onBluetoothDiscoverComplete = function(success, devices, error) {
-  this.btDiscoveryCompleteCallback( (success===1) , devices, error);
-}
-
-LineaProCDV.prototype.onBluetoothGetDeviceName = function(address, name) {
-  this.btGetDeviceNameCallback(address, name);
-}
 
 module.exports = new LineaProCDV();
