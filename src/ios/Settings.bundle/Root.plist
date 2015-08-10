@@ -24,15 +24,15 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>iTunes Sync Through Linea?</string>
+			<string>Enable PassThroughSync?</string>
 			<key>Key</key>
 			<string>PassThroughSync</string>
-			<key>DefaultValue</key>
-			<true/>
 			<key>TrueValue</key>
 			<true/>
 			<key>FalseValue</key>
 			<false/>
+			<key>DefaultValue</key>
+			<true/>
 		</dict>
 	</array>
 	<key>StringsTable</key>
