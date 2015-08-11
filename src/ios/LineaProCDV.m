@@ -14,7 +14,6 @@
 			[dtdev connect];
 		}
 
-
 		[self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
 		// Get App Preferences internally
@@ -25,7 +24,7 @@
 	}];
 }
 
-- (void)getConnectionStatus:(CDVInvokedUrlCommand*)command
+- (void)getConnState:(CDVInvokedUrlCommand*)command
 {
 	CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt:[dtdev connstate]];
 	[self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -33,6 +32,7 @@
 
 // Required for init
 - (void)connectionState: (int)state {
+
 	switch (state) {
 		case CONN_DISCONNECTED:
 		case CONN_CONNECTING:
@@ -41,7 +41,7 @@
 			break;
 	}
 
-	NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.connectionChanged(%d);", state];
+	NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.changedConnState(%d);", state];
 	[[super webView] stringByEvaluatingJavaScriptFromString:retStr];
 }
 
@@ -64,7 +64,7 @@
 	[[super webView] stringByEvaluatingJavaScriptFromString:retStr];
 }
 
-// Common Linea Settings are grabbed from Settings.bundle.
+//Common Linea Settings are grabbed from Settings.bundle.
 - (void)applicationPreferences {
 
 	// Get Defaults
@@ -81,7 +81,7 @@
 		NSLog(@"URL: %@", URLString);
 	}
 
-	// Enable PassThroughSync doesn't make sense to common user.  BOOL is flipped intentionally.
+	// EnablePassThroughSync is unintuitive. Option to "Scan While Charging" passed as the preference
 	if (!ScanWhileCharging) {
 		NSLog(@"ScanWhileCharging: FALSE (Default)");
 	} else {
@@ -94,7 +94,7 @@
 		NSLog(@"FastCharge: TRUE");
 	}
 
-	[[NSUserDefaults standardUserDefaults] synchronize];
+//	[[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 

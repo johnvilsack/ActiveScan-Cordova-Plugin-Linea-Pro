@@ -9,7 +9,7 @@
 }
 
 - (void)initDT:(CDVInvokedUrlCommand*)command;
-- (void)getConnectionStatus:(CDVInvokedUrlCommand*)command;
+- (void)getConnState:(CDVInvokedUrlCommand*)command;
 - (void)startBarcode:(CDVInvokedUrlCommand*)command;
 - (void)stopBarcode:(CDVInvokedUrlCommand*)command;
 

@@ -24,7 +24,7 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Scan While Charging (Disables Sync)</string>
+			<string>Scan while Charging?</string>
 			<key>Key</key>
 			<string>ScanWhileCharging</string>
 			<key>TrueValue</key>

@@ -30,15 +30,14 @@ LineaProCDV.prototype.barcodeStop = function() {
 	exec(null, null, "LineaProCDV", "stopBarcode", []);
 };
 
-LineaProCDV.prototype.connectionChanged = function(state) {
-	this.respConnection(state);
+LineaProCDV.prototype.changedConnState = function(state) {
+	this.respConnection = state;
+	onConnectivityChange(this.respConnection);
 };
 
 LineaProCDV.prototype.barcodeData = function(barcode, type) {
-	// Barcode scanning magic goes here.
-	console.log(barcode + " :: " + type);
-	var data = { rawCodesArr: rawCodesArr };
-	this.respBarcode(data);
+	this.respBarcode = { "barcode" : barcode, "type" : type };
+	onBarcodeScanned(this.respBarcode);
 };
 
 module.exports = new LineaProCDV();
