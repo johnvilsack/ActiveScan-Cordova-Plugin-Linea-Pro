@@ -10,29 +10,43 @@
 			<key>AutocorrectionType</key>
 			<string>No</string>
 			<key>Title</key>
-			<string>FOO</string>
+			<string>URL</string>
 			<key>AutocapitalizationType</key>
 			<string>None</string>
 			<key>IsSecure</key>
 			<false/>
 			<key>Key</key>
-			<string>FOO</string>
+			<string>URLString</string>
 			<key>DefaultValue</key>
-			<string>http://blackj.ick</string>
+			<string></string>
 		</dict>
 		<dict>
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
-			<string>Enable PassThroughSync?</string>
+			<string>Scan While Charging (Disables Sync)</string>
 			<key>Key</key>
-			<string>PassThroughSync</string>
+			<string>ScanWhileCharging</string>
 			<key>TrueValue</key>
 			<true/>
 			<key>FalseValue</key>
 			<false/>
 			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Enable (1A) Fast Charging?</string>
+			<key>Key</key>
+			<string>FastCharge</string>
+			<key>TrueValue</key>
 			<true/>
+			<key>FalseValue</key>
+			<false/>
+			<key>DefaultValue</key>
+			<false/>
 		</dict>
 	</array>
 	<key>StringsTable</key>

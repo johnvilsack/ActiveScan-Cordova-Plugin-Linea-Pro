@@ -14,9 +14,14 @@
 			[dtdev connect];
 		}
 
+
 		[self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
+		// Get App Preferences internally
+		[self applicationPreferences];
+
 		NSLog(@"Linea initDT Complete");
+
 	}];
 }
 
@@ -58,5 +63,40 @@
 	NSString* retStr = [ NSString stringWithFormat:@"LineaProCDV.barcodeData('%@', '%@');", barcode, [dtdev barcodeType2Text:type]];
 	[[super webView] stringByEvaluatingJavaScriptFromString:retStr];
 }
+
+// Common Linea Settings are grabbed from Settings.bundle.
+- (void)applicationPreferences {
+
+	// Get Defaults
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+	NSString* URLString = [defaults stringForKey:@"URLString"]; // This is the initial page load
+	BOOL ScanWhileCharging = [defaults boolForKey:@"ScanWhileCharging"]; 
+	BOOL FastCharge = [defaults boolForKey:@"FastCharge"];
+
+	if (URLString == nil || [URLString isEqual:@"index.html"]) {
+		NSString* URLString = @"index.html";
+		NSLog(@"URL: %@ (Default)", URLString);
+	} else {
+		NSLog(@"URL: %@", URLString);
+	}
+
+	// Enable PassThroughSync doesn't make sense to common user.  BOOL is flipped intentionally.
+	if (!ScanWhileCharging) {
+		NSLog(@"ScanWhileCharging: FALSE (Default)");
+	} else {
+		NSLog(@"ScanWhileCharging: TRUE");
+	}
+
+	if (!FastCharge) {
+		NSLog(@"FastCharge: FALSE (Default)");
+	} else {
+		NSLog(@"FastCharge: TRUE");
+	}
+
+	[[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+
 
 @end
