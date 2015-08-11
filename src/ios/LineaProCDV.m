@@ -38,6 +38,7 @@
 		case CONN_CONNECTING:
 			break;
 		case CONN_CONNECTED:
+			[self applicationPreferences];
 			break;
 	}
 
@@ -64,8 +65,20 @@
 	[[super webView] stringByEvaluatingJavaScriptFromString:retStr];
 }
 
+- (void)doSync { 
+
+	 NSError *error=nil;
+
+	if (![dtdev setPassThroughSync:false error:&error])
+		NSLog(@"unsetPassThroughSync: %i %@", 0, error.description);
+	else
+		NSLog(@"unsetPassThroughSync: %i", 1);
+}
+
 //Common Linea Settings are grabbed from Settings.bundle.
 - (void)applicationPreferences {
+
+	NSError *error=nil;
 
 	// Get Defaults
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -84,8 +97,18 @@
 	// EnablePassThroughSync is unintuitive. Option to "Scan While Charging" passed as the preference
 	if (!ScanWhileCharging) {
 		NSLog(@"ScanWhileCharging: FALSE (Default)");
+		NSLog(@"===================================================================");
+			[dtdev setPassThroughSync:true error:&error];
+		NSLog(@"===================================================================");
 	} else {
 		NSLog(@"ScanWhileCharging: TRUE");
+
+		if (![dtdev setPassThroughSync:false error:&error]) {
+			NSLog(@"===================================================================");
+			NSLog(@"Disabling PassThroughSync: %i %@", 0, error.description);
+			NSLog(@"===================================================================");
+		}
+
 	}
 
 	if (!FastCharge) {
@@ -96,7 +119,5 @@
 
 //	[[NSUserDefaults standardUserDefaults] synchronize];
 }
-
-
 
 @end
