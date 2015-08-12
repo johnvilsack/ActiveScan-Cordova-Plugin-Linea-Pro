@@ -38,6 +38,7 @@
 		case CONN_CONNECTING:
 			break;
 		case CONN_CONNECTED:
+			// check prefs every connection load
 			[self applicationPreferences];
 			break;
 	}
@@ -65,59 +66,67 @@
 	[[super webView] stringByEvaluatingJavaScriptFromString:retStr];
 }
 
-- (void)doSync { 
-
-	 NSError *error=nil;
-
-	if (![dtdev setPassThroughSync:false error:&error])
-		NSLog(@"unsetPassThroughSync: %i %@", 0, error.description);
-	else
-		NSLog(@"unsetPassThroughSync: %i", 1);
-}
-
 //Common Linea Settings are grabbed from Settings.bundle.
 - (void)applicationPreferences {
 
 	NSError *error=nil;
 
-	// Get Defaults
+	// Get Preferences
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 
 	NSString* URLString = [defaults stringForKey:@"URLString"]; // This is the initial page load
 	BOOL ScanWhileCharging = [defaults boolForKey:@"ScanWhileCharging"]; 
 	BOOL FastCharge = [defaults boolForKey:@"FastCharge"];
 
+// @@ DefaultURL
 	if (URLString == nil || [URLString isEqual:@"index.html"]) {
 		NSString* URLString = @"index.html";
 		NSLog(@"URL: %@ (Default)", URLString);
 	} else {
 		NSLog(@"URL: %@", URLString);
 	}
+// !@ DefaultURL
 
+// @@ PassThroughSync
 	// EnablePassThroughSync is unintuitive. Option to "Scan While Charging" passed as the preference
 	if (!ScanWhileCharging) {
 		NSLog(@"ScanWhileCharging: FALSE (Default)");
-		NSLog(@"===================================================================");
-			[dtdev setPassThroughSync:true error:&error];
-		NSLog(@"===================================================================");
+		// You can scan while charging or connected to pistol grip, but you can't sync
+		[dtdev setPassThroughSync:true error:&error];
 	} else {
-		NSLog(@"ScanWhileCharging: TRUE");
-
+		// This puts the scanner back in sync mode, so iTunes, XCode, etc. work
 		if (![dtdev setPassThroughSync:false error:&error]) {
-			NSLog(@"===================================================================");
-			NSLog(@"Disabling PassThroughSync: %i %@", 0, error.description);
-			NSLog(@"===================================================================");
+			NSLog(@"ScanWhileCharging: TRUE");
 		}
-
 	}
+// !@ PassThroughSync
+
+// @@ USBChargeCurrent
+int current;
+// See if current is set.  If it's not, assume lower (default)
+if (![dtdev getUSBChargeCurrent:&current error:&error]) {
+	current = 500;
+	NSLog(@"Parameter for USBChargeCurrent Not Set");
+}
 
 	if (!FastCharge) {
+		// FastCharge is not set or FALSE.  Default to 500ma
 		NSLog(@"FastCharge: FALSE (Default)");
+		if (current != 500) {
+			int newCurrent = 500;
+			[dtdev setUSBChargeCurrent:newCurrent error:&error];
+		} 
 	} else {
+		// FastCharge is set to TRUE.  Set to 1A
 		NSLog(@"FastCharge: TRUE");
+		if (current != 1000) {
+			int newCurrent = 1000;
+			[dtdev setUSBChargeCurrent:newCurrent error:&error];
+		} 
 	}
+// !@ USBChargeCurrent
 
-//	[[NSUserDefaults standardUserDefaults] synchronize];
+	[[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 @end
